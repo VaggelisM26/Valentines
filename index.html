@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Are You Gay? - Meme Website</title>
+    <style>
+        /* Basic reset and styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Container for the main content */
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        /* Question styling */
+        .question {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button container */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: center;
+            height: auto; /* Let content size determine height */
+        }
+
+        /* Button styling */
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        /* Yes button */
+        .btn-yes {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-yes:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* No button */
+        .btn-no {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            position: static; /* keep in flow until moved via JS */
+            transition: all 0.2s ease;
+        }
+
+        /* Hidden class for elements we want to hide */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Image styling */
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            margin-top: 1rem;
+        }
+
+        /* Attempt counter styling (removed) */
+
+        /* Special message styling removed */
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .question {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 12px 24px;
+                font-size: 1.2rem;
+            }
+            
+            .buttons {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="question">Are you gay?</h1>
+        
+        <!-- (special message removed) -->
+        
+        <!-- Button container -->
+        <div class="buttons" id="buttonContainer">
+            <button class="btn btn-yes" id="yesBtn">Yes</button>
+            <button class="btn btn-no" id="noBtn">No</button>
+        </div>
+        
+        <!-- Images (initially hidden) -->
+        <img class="result-image hidden" id="resultImage" alt="Result">
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const buttonContainer = document.getElementById('buttonContainer');
+        const resultImage = document.getElementById('resultImage');
+        const container = document.querySelector('.container');
+
+        // Variables to track user interaction
+        let clickAttempts = 0;
+        const maxAttempts = 5; // After this many attempts, show the special image
+        let gameEnded = false;
+        // Track if user clicked Yes - when true, No should stop moving
+        let yesClicked = false;
+
+        // Function to get random position for the "No" button
+        function getRandomPosition() {
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Use the actual button dimensions to avoid placing it off-screen
+            const buttonWidth = noBtn.offsetWidth || 120;
+            const buttonHeight = noBtn.offsetHeight || 50;
+
+            // Calculate safe positioning ranges (avoid edges)
+            const safeMargin = 20;
+            const maxX = Math.max(0, viewportWidth - buttonWidth - safeMargin * 2);
+            const maxY = Math.max(0, viewportHeight - buttonHeight - safeMargin * 2);
+
+            // Generate random coordinates within the safe range
+            const x = Math.random() * maxX + safeMargin;
+            const y = Math.random() * maxY + safeMargin;
+
+            return { x, y };
+        }
+
+        // Function to move the "No" button to a random position
+        function moveNoButton() {
+            if (yesClicked) return; // Stop moving only after Yes is clicked
+            
+            clickAttempts++;
+            
+            // Get random position
+            const position = getRandomPosition();
+            
+            // Apply new position with smooth transition
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = position.x + 'px';
+            noBtn.style.top = position.y + 'px';
+            noBtn.style.zIndex = '1000';
+            
+            // Add a little shake animation for fun
+            noBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                noBtn.style.transform = 'scale(1)';
+            }, 100);
+            
+            // Check if user has tried enough times
+            if (clickAttempts >= maxAttempts) {
+                showSpecialContent();
+            }
+            
+            console.log(`User attempted to click "No" ${clickAttempts} times`);
+        }
+
+        // Function to show special content after multiple attempts
+        function showSpecialContent() {
+            // Keep No interactive and ensure buttons are visible above the image.
+            noBtn.style.zIndex = '1100';
+            noBtn.style.position = noBtn.style.position || 'fixed';
+
+            // Ensure Yes button stays visible and sits above the image
+            yesBtn.style.zIndex = '1100';
+            yesBtn.style.position = yesBtn.style.position || 'relative';
+
+            // Show image1 (the "gotcha" image) behind the buttons
+            resultImage.src = 'image1.png';
+            resultImage.alt = 'Gotcha!';
+            resultImage.classList.remove('hidden');
+            resultImage.style.position = 'relative';
+            resultImage.style.zIndex = '500';
+
+            console.log('Showing special content (image1.png) after multiple attempts');
+        }
+
+        // Function to handle "Yes" button click
+        function handleYesClick() {
+            if (gameEnded) return; // Prevent multiple clicks
+
+            gameEnded = true;
+            yesClicked = true; // stop No button from moving after Yes
+
+            // Hide buttons container (we remove the buttons visually)
+            buttonContainer.classList.add('hidden');
+            
+            // Show image2 (the "yes" result)
+            resultImage.src = 'image2.jpg';
+            resultImage.alt = 'Yes result';
+            resultImage.classList.remove('hidden');
+            
+            console.log('User clicked "Yes" - showing image2.jpg');
+        }
+
+        // Event listeners for the "No" button
+        // Trigger on both mouseenter (hover) and click
+        noBtn.addEventListener('mouseenter', moveNoButton);
+        noBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent any default action
+            moveNoButton();
+        });
+
+        // Event listener for the "Yes" button
+        yesBtn.addEventListener('click', handleYesClick);
+
+        // Optional: Add touch events for mobile devices
+        noBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // Prevent default touch behavior
+            moveNoButton();
+        });
+
+        // Prevent context menu on the "No" button (right-click)
+        noBtn.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            moveNoButton();
+        });
+
+        // Initialize the page
+        console.log('Meme website loaded successfully!');
+        console.log('Try to click the "No" button... if you can! 😈');
+    </script>
+</body>
+</html>
